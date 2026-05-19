@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>STUDIO 8 — Premium Hair & Color Studio Prague</title>
+
+<!-- Three.js r128 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<!-- GSAP + ScrollTrigger -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+  /* ── RESET & ROOT ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { overflow-x: hidden; scroll-behavior: smooth; }
+  body {
+    overflow-x: hidden;
+    background: #050505;
+    color: #e8e0d8;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+
+  /* ── GOOGLE FONTS ── */
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Neue+Haas+Grotesk+Display+Pro:wght@400;500&family=Space+Mono:wght@400;700&display=swap');
+
+  /* ── CANVAS CONTAINER ── */
+  #canvas-container {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* ── NAVBAR ── */
+  #navbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 3rem;
+    background: rgba(5,5,5,0.55);
+    backdrop-filter: blur(18px) saturate(180%);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+    border-bottom: 1px solid rgba(255,182,193,0.08);
+    transition: background 0.4s;
+  }
+  #navbar .logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.15rem;
+    letter-spacing: 0.35em;
+    color: #e8e0d8;
+    text-transform: uppercase;
+  }
+  #navbar .logo span {
+    color: #ffb6c1;
+  }
+  .lang-switcher {
+    display: flex; gap: 0.6rem;
+  }
+  .lang-btn {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    padding: 0.35rem 0.75rem;
+    border: 1px solid rgba(255,182,193,0.25);
+    border-radius: 2px;
+    background: transparent;
+    color: #a09090;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-transform: uppercase;
+  }
+  .lang-btn.active,
+  .lang-btn:hover {
+    background: rgba(255,182,193,0.12);
+    color: #ffb6c1;
+    border-color: rgba(255,182,193,0.5);
+  }
+
+  /* ── SECTIONS ── */
+  section { position: relative; z-index: 10; }
+
+  /* ── HERO ── */
+  #hero {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    pointer-events: none;
+  }
+  #hero .eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.42em;
+    color: #ffb6c1;
+    text-transform: uppercase;
+    margin-bottom: 1.8rem;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  #hero h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: clamp(4.5rem, 12vw, 10rem);
+    line-height: 0.9;
+    letter-spacing: -0.02em;
+    color: #e8e0d8;
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  #hero h1 em {
+    font-style: italic;
+    color: #ffb6c1;
+  }
+  #hero .subline {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: clamp(1rem, 2.2vw, 1.5rem);
+    letter-spacing: 0.12em;
+    color: rgba(232,224,216,0.5);
+    margin-top: 2.2rem;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  #hero .scroll-cue {
+    position: absolute;
+    bottom: 2.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0;
+    pointer-events: none;
+  }
+  #hero .scroll-cue span {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    color: rgba(255,182,193,0.5);
+    text-transform: uppercase;
+  }
+  .scroll-line {
+    width: 1px;
+    height: 50px;
+    background: linear-gradient(to bottom, rgba(255,182,193,0.6), transparent);
+    animation: scrollPulse 2s ease-in-out infinite;
+  }
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.3; transform: scaleY(1); }
+    50% { opacity: 1; transform: scaleY(1.2); }
+  }
+
+  /* ── DIAGONAL PARTICLE CANVAS ── */
+  #particle-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  /* ── DATA PULSE STRINGS ── */
+  #data-pulses {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: 2;
+    pointer-events: none;
+    overflow: hidden;
+    opacity: 0;
+  }
+  .pulse-string {
+    position: absolute;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.25em;
+    color: rgba(255,182,193,0.7);
+    white-space: nowrap;
+    text-transform: uppercase;
+  }
+
+  /* ── SERVICES SECTION ── */
+  #services {
+    min-height: 100vh;
+    padding: 10vh 4vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  #services .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.42em;
+    color: #ffb6c1;
+    text-transform: uppercase;
+    margin-bottom: 3.5rem;
+    align-self: flex-start;
+    margin-left: 2vw;
+  }
+  #bento-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto auto;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 1280px;
+    transform-origin: center center;
+  }
+  .bento-card {
+    position: relative;
+    border: 1px solid rgba(255,182,193,0.12);
+    border-radius: 4px;
+    background: rgba(10,8,8,0.85);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    overflow: hidden;
+    padding: 2.5rem 2.8rem 3rem;
+    cursor: default;
+    transform-style: preserve-3d;
+    transition: border-color 0.35s;
+  }
+  .bento-card:hover {
+    border-color: rgba(255,182,193,0.35);
+  }
+  .bento-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 30% 20%, rgba(255,182,193,0.06) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .bento-card.large {
+    grid-column: span 2;
+    min-height: 340px;
+  }
+  .bento-card.tall {
+    grid-row: span 2;
+    min-height: 500px;
+  }
+  .bento-card .card-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    color: rgba(255,182,193,0.4);
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+  }
+  .bento-card .card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: clamp(1.6rem, 3vw, 2.6rem);
+    line-height: 1.1;
+    color: #e8e0d8;
+    margin-bottom: 1.4rem;
+  }
+  .bento-card .card-desc {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: rgba(232,224,216,0.55);
+    filter: blur(4px);
+    transition: filter 0.6s ease;
+  }
+  .bento-card:hover .card-desc {
+    filter: blur(0px);
+  }
+  .bento-card .card-tag {
+    position: absolute;
+    bottom: 2rem; right: 2rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.22em;
+    color: rgba(255,182,193,0.35);
+    text-transform: uppercase;
+  }
+  .bento-card .card-accent {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(255,182,193,0.5), transparent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.5s ease;
+  }
+  .bento-card:hover .card-accent {
+    transform: scaleX(1);
+  }
+  .card-icon {
+    width: 42px; height: 42px;
+    margin-bottom: 1.5rem;
+    opacity: 0.55;
+  }
+
+  /* ── SPACER FOR SCROLL ── */
+  .scroll-spacer { height: 30vh; }
+
+  /* ── ABOUT / INTRO ── */
+  #about {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12vh 8vw;
+  }
+  .about-inner {
+    max-width: 860px;
+  }
+  #about .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.42em;
+    color: #ffb6c1;
+    text-transform: uppercase;
+    margin-bottom: 2.5rem;
+    display: block;
+  }
+  #about p {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: clamp(1.5rem, 3vw, 2.4rem);
+    line-height: 1.5;
+    color: rgba(232,224,216,0.85);
+  }
+  #about p em {
+    font-style: italic;
+    color: #ffb6c1;
+  }
+
+  /* ── SPECIALISTS ── */
+  #specialists {
+    padding: 12vh 6vw;
+    min-height: 100vh;
+  }
+  #specialists .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.42em;
+    color: #ffb6c1;
+    text-transform: uppercase;
+    margin-bottom: 4rem;
+    display: block;
+  }
+  .specialists-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+  .spec-card {
+    border: 1px solid rgba(255,182,193,0.1);
+    border-radius: 3px;
+    background: rgba(8,6,6,0.9);
+    padding: 2.5rem 2rem;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+  .spec-card:hover {
+    border-color: rgba(255,182,193,0.3);
+    transform: translateY(-4px);
+  }
+  .spec-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,182,193,0.4), transparent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.5s;
+  }
+  .spec-card:hover::after {
+    transform: scaleX(1);
+  }
+  .spec-avatar {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,182,193,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.6rem;
+    font-weight: 300;
+    color: #ffb6c1;
+    background: rgba(255,182,193,0.05);
+  }
+  .spec-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 400;
+    font-size: 1.45rem;
+    color: #e8e0d8;
+    margin-bottom: 0.4rem;
+  }
+  .spec-role {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    color: #ffb6c1;
+    text-transform: uppercase;
+    margin-bottom: 1.4rem;
+  }
+  .spec-bio {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: 1rem;
+    line-height: 1.7;
+    color: rgba(232,224,216,0.5);
+  }
+  .spec-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
+  }
+  .spec-skill-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.15em;
+    color: rgba(255,182,193,0.6);
+    border: 1px solid rgba(255,182,193,0.18);
+    padding: 0.25rem 0.6rem;
+    border-radius: 2px;
+    text-transform: uppercase;
+  }
+
+  /* ── MAP SECTION ── */
+  #location {
+    padding: 10vh 6vw;
+    min-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #location .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.42em;
+    color: #ffb6c1;
+    text-transform: uppercase;
+    margin-bottom: 1.2rem;
+    align-self: flex-start;
+    margin-left: 2vw;
+  }
+  #location h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: clamp(2rem, 5vw, 4rem);
+    color: #e8e0d8;
+    margin-bottom: 3.5rem;
+    align-self: flex-start;
+    margin-left: 2vw;
+    line-height: 1.1;
+  }
+  .map-wrapper {
+    width: 100%;
+    max-width: 1200px;
+    height: 420px;
+    border: 1px solid rgba(255,182,193,0.12);
+    border-radius: 4px;
+    overflow: hidden;
+    filter: invert(90%) hue-rotate(175deg) saturate(0.3) brightness(0.85);
+    position: relative;
+  }
+  .map-wrapper iframe {
+    width: 100%; height: 100%;
+    border: none;
+  }
+  .address-block {
+    display: flex;
+    gap: 4rem;
+    margin-top: 3rem;
+    align-self: flex-start;
+    margin-left: 2vw;
+  }
+  .address-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .address-item .label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.28em;
+    color: rgba(255,182,193,0.45);
+    text-transform: uppercase;
+  }
+  .address-item .value {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: 1.15rem;
+    color: rgba(232,224,216,0.75);
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid rgba(255,182,193,0.08);
+    padding: 4rem 6vw 3rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+  .footer-logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 1rem;
+    letter-spacing: 0.4em;
+    color: rgba(232,224,216,0.4);
+    text-transform: uppercase;
+  }
+  .footer-logo span { color: rgba(255,182,193,0.6); }
+  .footer-tagline {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-size: 0.95rem;
+    font-style: italic;
+    color: rgba(232,224,216,0.3);
+    margin-top: 0.4rem;
+  }
+  .footer-nav {
+    display: flex;
+    gap: 2.5rem;
+  }
+  .footer-nav a {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.22em;
+    color: rgba(232,224,216,0.35);
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: color 0.25s;
+  }
+  .footer-nav a:hover { color: #ffb6c1; }
+  .footer-copy {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.15em;
+    color: rgba(232,224,216,0.2);
+    width: 100%;
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255,182,193,0.05);
+  }
+
+  /* ── DIAGONAL LINE OVERLAY ── */
+  .diag-line {
+    position: absolute;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,182,193,0.3), transparent);
+    transform-origin: left center;
+    pointer-events: none;
+  }
+
+  /* ── SCROLL INDICATOR ── */
+  .section-number {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.2em;
+    color: rgba(255,182,193,0.2);
+    position: absolute;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%) rotate(90deg);
+    transform-origin: center;
+  }
+
+  /* ── NOISE OVERLAY ── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    #bento-grid { grid-template-columns: 1fr 1fr; }
+    .bento-card.large { grid-column: span 2; }
+    .bento-card.tall { grid-row: span 1; }
+    .specialists-grid { grid-template-columns: 1fr; }
+    #navbar { padding: 1.2rem 1.5rem; }
+  }
+  @media (max-width: 600px) {
+    #bento-grid { grid-template-columns: 1fr; }
+    .bento-card.large { grid-column: span 1; }
+    .specialists-grid { grid-template-columns: 1fr; }
+    footer { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ────────────── WEBGL CANVAS ────────────── -->
+<div id="canvas-container"></div>
+
+<!-- ────────────── PARTICLE CANVAS ────────────── -->
+<canvas id="particle-canvas"></canvas>
+
+<!-- ────────────── DATA PULSES ────────────── -->
+<div id="data-pulses">
+  <div class="pulse-string" id="pulse-1" style="bottom:20%;left:-20%;">INFINITY_HAIR</div>
+  <div class="pulse-string" id="pulse-2" style="bottom:35%;left:-20%;">COLOR_BALAYAGE</div>
+  <div class="pulse-string" id="pulse-3" style="bottom:50%;left:-20%;">MAKEUP_ART</div>
+  <div class="pulse-string" id="pulse-4" style="bottom:65%;left:-20%;">STUDIO_8_PRAGUE</div>
+  <div class="pulse-string" id="pulse-5" style="bottom:10%;left:-20%;">PLZEŇSKÁ_535/50</div>
+</div>
+
+<!-- ────────────── NAVBAR ────────────── -->
+<nav id="navbar">
+  <div class="logo">STUDIO <span>8</span></div>
+  <div class="lang-switcher">
+    <button class="lang-btn active" data-lang="en" onclick="setLang('en')">EN</button>
+    <button class="lang-btn" data-lang="cz" onclick="setLang('cz')">CZ</button>
+    <button class="lang-btn" data-lang="ru" onclick="setLang('ru')">RU</button>
+  </div>
+</nav>
+
+<!-- ────────────── HERO ────────────── -->
+<section id="hero">
+  <div class="eyebrow" id="hero-eyebrow" data-en="Prague · Plzeňská 535/50" data-cz="Praha · Plzeňská 535/50" data-ru="Прага · Плзенска 535/50">Prague · Plzeňská 535/50</div>
+  <h1 id="hero-title">
+    <span data-en="Studio" data-cz="Studio" data-ru="Студия">Studio</span><br/>
+    <em><span data-en="Eight" data-cz="Osm" data-ru="Восемь">Eight</span></em>
+  </h1>
+  <div class="subline" id="hero-sub" data-en="Premium Hair & Color · Prague" data-cz="Prémiový vlasový salon · Praha" data-ru="Премиальный салон волос · Прага">Premium Hair & Color · Prague</div>
+  <div class="scroll-cue" id="scroll-cue">
+    <div class="scroll-line"></div>
+    <span data-en="Scroll" data-cz="Roluj" data-ru="Пролистать">Scroll</span>
+  </div>
+</section>
+
+<!-- ────────────── ABOUT INTRO ────────────── -->
+<section id="about">
+  <div class="about-inner">
+    <span class="section-label" data-en="Our Philosophy" data-cz="Naše Filozofie" data-ru="Наша Философия">Our Philosophy</span>
+    <p id="about-text" data-en="We don't cut hair. We architect <em>confidence</em>. At Studio 8, every strand is a brushstroke — every color, a conversation between the artist and the infinite possibility of <em>you</em>." data-cz="My nestříháme vlasy. My tvoříme <em>sebedůvěru</em>. V Studio 8 je každý pramen tahem štětce — každá barva, rozhovor mezi umělcem a nekonečnými možnostmi <em>vás</em>." data-ru="Мы не стрижём волосы. Мы создаём <em>уверенность</em>. В Studio 8 каждая прядь — мазок кисти. Каждый цвет — диалог художника с бесконечными возможностями <em>вас</em>.">We don't cut hair. We architect <em>confidence</em>. At Studio 8, every strand is a brushstroke — every color, a conversation between the artist and the infinite possibility of <em>you</em>.</p>
+  </div>
+</section>
+
+<!-- SCROLL SPACER -->
+<div class="scroll-spacer"></div>
+
+<!-- ────────────── SERVICES ────────────── -->
+<section id="services">
+  <div class="section-label" data-en="— Services" data-cz="— Služby" data-ru="— Услуги">— Services</div>
+
+  <div id="bento-grid">
+
+    <!-- Card 1: Large -->
+    <div class="bento-card large" id="bc-1" data-tilt>
+      <div class="card-num">01 /</div>
+      <svg class="card-icon" viewBox="0 0 42 42" fill="none" stroke="rgba(255,182,193,0.6)" stroke-width="1">
+        <path d="M21 3 C10 3 3 12 3 21 C3 30 10 39 21 39 C32 39 39 30 39 21 C39 12 32 3 21 3 Z"/>
+        <path d="M21 3 C21 3 28 12 28 21 C28 30 21 39 21 39"/>
+        <path d="M3 21 L39 21"/>
+      </svg>
+      <div class="card-title" data-en="Premium Hair Design" data-cz="Prémiový Design Vlasů" data-ru="Премиальный Дизайн Волос">Premium Hair Design</div>
+      <div class="card-desc" data-en="From architectural precision cuts to bespoke styling — we sculpt your hair to amplify your identity. Every appointment is a private atelier session." data-cz="Od architektonicky přesných střihů po individuální styling — tvarujeme vaše vlasy tak, aby zesílily vaši identitu. Každé setkání je soukromou ateliérovou session." data-ru="От архитектурных точных стрижек до индивидуального стайлинга — мы создаём образ, усиливающий вашу индивидуальность. Каждый визит — приватная сессия ателье.">From architectural precision cuts to bespoke styling — we sculpt your hair to amplify your identity. Every appointment is a private atelier session.</div>
+      <div class="card-accent"></div>
+      <div class="card-tag" data-en="HAIR DESIGN" data-cz="DESIGN VLASŮ" data-ru="ДИЗАЙН ВОЛОС">HAIR DESIGN</div>
+    </div>
+
+    <!-- Card 2: Tall -->
+    <div class="bento-card tall" id="bc-2" data-tilt>
+      <div class="card-num">02 /</div>
+      <svg class="card-icon" viewBox="0 0 42 42" fill="none" stroke="rgba(255,182,193,0.6)" stroke-width="1">
+        <path d="M8 35 L21 6 L34 35"/>
+        <path d="M12 26 L30 26"/>
+        <circle cx="21" cy="15" r="4"/>
+      </svg>
+      <div class="card-title" data-en="Technical Coloring & Balayage" data-cz="Technické Barvení & Balayage" data-ru="Техническое Окрашивание & Балаяж">Technical Coloring<br/>& Balayage</div>
+      <div class="card-desc" data-en="Our master colorists blend science with artistry — from organic root-to-tip transformations to dimensional sun-kissed balayage that moves like light itself. We use only the finest professional formulas." data-cz="Naši mistři barevníci spojují vědu s uměním — od organických transformací od kořenů po špičky po dimenzionální sluncem políbené balayage, které se pohybuje jako světlo samotné." data-ru="Наши мастера-колористы соединяют науку с искусством — от органических трансформаций до объёмного балаяжа, движущегося как сам свет. Только лучшие профессиональные формулы.">Our master colorists blend science with artistry — from organic root-to-tip transformations to dimensional sun-kissed balayage that moves like light itself. We use only the finest professional formulas.</div>
+      <div class="card-accent"></div>
+      <div class="card-tag" data-en="COLOR ART" data-cz="BAREVNÉ UMĚNÍ" data-ru="ЦВЕТОВОЕ ИСКУССТВО">COLOR ART</div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="bento-card" id="bc-3" data-tilt>
+      <div class="card-num">03 /</div>
+      <svg class="card-icon" viewBox="0 0 42 42" fill="none" stroke="rgba(255,182,193,0.6)" stroke-width="1">
+        <circle cx="21" cy="17" r="10"/>
+        <path d="M12 36 C12 28 30 28 30 36"/>
+        <path d="M16 14 Q21 10 26 14"/>
+      </svg>
+      <div class="card-title" data-en="Luxury Makeup & Aesthetics" data-cz="Luxusní Make-up & Estetika" data-ru="Люксовый Макияж & Эстетика">Luxury Makeup<br/>& Aesthetics</div>
+      <div class="card-desc" data-en="Occasion artistry for every milestone — weddings, editorial, events. Our makeup artists create looks that endure both in memory and on camera." data-cz="Umění pro každý milník — svatby, editorial, eventos. Naši umělci make-upu vytvářejí výsledky, které přetrvávají jak v paměti, tak na fotoaparátu." data-ru="Образы для каждого особого момента — свадьбы, эдиториал, события. Наши художники-визажисты создают образы, которые остаются в памяти и на камере.">Occasion artistry for every milestone — weddings, editorial, events. Our makeup artists create looks that endure both in memory and on camera.</div>
+      <div class="card-accent"></div>
+      <div class="card-tag" data-en="MAKEUP" data-cz="MAKE-UP" data-ru="МАКИЯЖ">MAKEUP</div>
+    </div>
+
+    <!-- Card 4 -->
+    <div class="bento-card" id="bc-4" data-tilt>
+      <div class="card-num">04 /</div>
+      <svg class="card-icon" viewBox="0 0 42 42" fill="none" stroke="rgba(255,182,193,0.6)" stroke-width="1">
+        <rect x="6" y="10" width="30" height="22" rx="2"/>
+        <path d="M14 10 L14 32"/>
+        <path d="M28 10 L28 32"/>
+        <path d="M6 21 L36 21"/>
+      </svg>
+      <div class="card-title" data-en="Scalp & Hair Treatments" data-cz="Ošetření Vlasů & Pokožky Hlavy" data-ru="Уходы за Волосами & Кожей Головы">Scalp & Hair<br/>Treatments</div>
+      <div class="card-desc" data-en="Deep-restoration protocols using Kerastase, Olaplex, and exclusive Prague-sourced formulas to revitalise the most damaged hair." data-cz="Hluboké restaurační protokoly s Kerastase, Olaplex a exkluzivními pražskými formulemi pro obnovu i těch nejpoškozenějších vlasů." data-ru="Протоколы глубокого восстановления с Kerastase, Olaplex и эксклюзивными пражскими формулами для самых повреждённых волос.">Deep-restoration protocols using Kerastase, Olaplex, and exclusive Prague-sourced formulas to revitalise the most damaged hair.</div>
+      <div class="card-accent"></div>
+      <div class="card-tag" data-en="TREATMENT" data-cz="OŠETŘENÍ" data-ru="УХОД">TREATMENT</div>
+    </div>
+
+    <!-- Card 5 -->
+    <div class="bento-card" id="bc-5" data-tilt>
+      <div class="card-num">05 /</div>
+      <svg class="card-icon" viewBox="0 0 42 42" fill="none" stroke="rgba(255,182,193,0.6)" stroke-width="1">
+        <path d="M21 6 L25 16 L37 16 L28 23 L31 34 L21 27 L11 34 L14 23 L5 16 L17 16 Z"/>
+      </svg>
+      <div class="card-title" data-en="Bridal & Event Styling" data-cz="Svatební & Event Styling" data-ru="Свадебный & Событийный Стайлинг">Bridal & Event<br/>Styling</div>
+      <div class="card-desc" data-en="Complete look creation for your most important moments — from trial sessions to on-location styling on the day." data-cz="Tvorba kompletního vzhledu pro vaše nejdůležitější okamžiky — od zkušebních session po styling na místě v den události." data-ru="Полное создание образа для ваших важнейших моментов — от пробных сессий до стайлинга на месте в день события.">Complete look creation for your most important moments — from trial sessions to on-location styling on the day.</div>
+      <div class="card-accent"></div>
+      <div class="card-tag" data-en="BRIDAL" data-cz="SVATEBNÍ" data-ru="СВАДЕБНЫЙ">BRIDAL</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- SCROLL SPACER -->
+<div class="scroll-spacer"></div>
+
+<!-- ────────────── SPECIALISTS ────────────── -->
+<section id="specialists">
+  <span class="section-label" data-en="— Our Team" data-cz="— Náš Tým" data-ru="— Наша Команда">— Our Team</span>
+  <div class="specialists-grid">
+
+    <div class="spec-card">
+      <div class="spec-avatar">M</div>
+      <div class="spec-name" data-en="Marie Horáčková" data-cz="Marie Horáčková" data-ru="Мари Горачкова">Marie Horáčková</div>
+      <div class="spec-role" data-en="Master Colorist & Creative Director" data-cz="Mistrovský Kolorista & Kreativní Ředitelka" data-ru="Мастер-колорист & Креативный Директор">Master Colorist & Creative Director</div>
+      <div class="spec-bio" data-en="With 14 years of experience across Prague, Paris, and Milan, Marie brings an unrivalled eye for color theory and dimensional technique. Specialist in lived-in blonde, brunette balayage, and color correction." data-cz="S 14 lety zkušeností z Prahy, Paříže a Milána přináší Marie neporovnatelný pohled na teorii barev a dimenzionální techniku. Specialistka na přirozené blond, balayage brunette a korekci barvy." data-ru="С 14-летним опытом работы в Праге, Париже и Милане Мари обладает непревзойдённым взглядом на теорию цвета. Специалист по живым блондам, брюнет-балаяжу и цветовой коррекции.">With 14 years of experience across Prague, Paris, and Milan, Marie brings an unrivalled eye for color theory and dimensional technique.</div>
+      <div class="spec-skills">
+        <span class="spec-skill-tag">Balayage</span>
+        <span class="spec-skill-tag">Color Correction</span>
+        <span class="spec-skill-tag">Lived-in Blonde</span>
+        <span class="spec-skill-tag">Highlights</span>
+      </div>
+    </div>
+
+    <div class="spec-card">
+      <div class="spec-avatar">T</div>
+      <div class="spec-name" data-en="Tomáš Veselý" data-cz="Tomáš Veselý" data-ru="Томаш Веселы">Tomáš Veselý</div>
+      <div class="spec-role" data-en="Senior Hair Architect" data-cz="Senior Vlasový Architekt" data-ru="Старший Архитектор Волос">Senior Hair Architect</div>
+      <div class="spec-bio" data-en="Trained at the Vidal Sassoon Academy in London, Tomáš is our structural precision specialist. His cuts are built to last — and to grow beautifully. Known for editorial razor cuts and geometric precision." data-cz="Vyškolený na Vidal Sassoon Academy v Londýně, Tomáš je naším specialistou na strukturální přesnost. Jeho střihy jsou postaveny na vydržení — a krásný růst. Známý pro editorial střihy a geometrickou přesnost." data-ru="Прошедший обучение в Vidal Sassoon Academy в Лондоне, Томаш — наш специалист по структурной точности. Его стрижки созданы на годы и растут красиво.">Trained at the Vidal Sassoon Academy in London, Tomáš is our structural precision specialist. His cuts are built to last — and to grow beautifully.</div>
+      <div class="spec-skills">
+        <span class="spec-skill-tag">Precision Cuts</span>
+        <span class="spec-skill-tag">Razor Technique</span>
+        <span class="spec-skill-tag">Texture</span>
+        <span class="spec-skill-tag">Men's Grooming</span>
+      </div>
+    </div>
+
+    <div class="spec-card">
+      <div class="spec-avatar">A</div>
+      <div class="spec-name" data-en="Alžběta Novotná" data-cz="Alžběta Novotná" data-ru="Элжбета Новотна">Alžběta Novotná</div>
+      <div class="spec-role" data-en="Makeup Artist & Bridal Specialist" data-cz="Makeup Artist & Specialistka na Svatební Styling" data-ru="Визажист & Свадебный Специалист">Makeup Artist & Bridal Specialist</div>
+      <div class="spec-bio" data-en="Alžběta's editorial portfolio spans Czech Vogue, Elle, and international campaigns. Her gift is translating personality into look — creating makeup that photographs as beautifully as it appears in life." data-cz="Alžbětin editorial porfolio zahrnuje Czech Vogue, Elle a mezinárodní kampaně. Jejím darem je překlad osobnosti do vzhledu — make-up, který fotí stejně krásně, jak vypadá v životě." data-ru="Портфолио Элжбеты охватывает Czech Vogue, Elle и международные кампании. Её дар — переводить личность в образ, создавая макияж, который фотографируется так же прекрасно, как и выглядит в жизни.">Alžběta's editorial portfolio spans Czech Vogue, Elle, and international campaigns. Her gift is translating personality into look.</div>
+      <div class="spec-skills">
+        <span class="spec-skill-tag">Bridal Makeup</span>
+        <span class="spec-skill-tag">Editorial</span>
+        <span class="spec-skill-tag">Airbrush</span>
+        <span class="spec-skill-tag">Skincare Prep</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ────────────── LOCATION ────────────── -->
+<section id="location">
+  <div class="section-label" data-en="— Find Us" data-cz="— Kde Nás Najít" data-ru="— Как Нас Найти">— Find Us</div>
+  <h2 data-en="Prague Studio" data-cz="Pražské Studio" data-ru="Пражская Студия">Prague Studio</h2>
+
+  <div class="map-wrapper">
+    <iframe
+      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2561.9186261668085!2d14.393199915918!3d50.072099879422!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x470b9489dc80acb3%3A0x1d27b4bbec4a7b24!2sPlze%C5%88sk%C3%A1%20535%2F50%2C%20150%2000%20Praha%205-Smíchov!5e0!3m2!1sen!2scz!4v1690000000000!5m2!1sen!2scz"
+      allowfullscreen=""
+      loading="lazy"
+      referrerpolicy="no-referrer-when-downgrade"
+      title="Studio 8 Prague Location">
+    </iframe>
+  </div>
+
+  <div class="address-block">
+    <div class="address-item">
+      <span class="label" data-en="Address" data-cz="Adresa" data-ru="Адрес">Address</span>
+      <span class="value">Plzeňská 535/50, Praha 5</span>
+    </div>
+    <div class="address-item">
+      <span class="label" data-en="Hours" data-cz="Otevírací Doby" data-ru="Часы Работы">Hours</span>
+      <span class="value" data-en="Mon–Sat: 9:00–19:00" data-cz="Po–So: 9:00–19:00" data-ru="Пн–Сб: 9:00–19:00">Mon–Sat: 9:00–19:00</span>
+    </div>
+    <div class="address-item">
+      <span class="label" data-en="Booking" data-cz="Rezervace" data-ru="Запись">Booking</span>
+      <span class="value">studio8.prague</span>
+    </div>
+  </div>
+</section>
+
+<!-- ────────────── FOOTER ────────────── -->
+<footer>
+  <div>
+    <div class="footer-logo">Studio <span>8</span></div>
+    <div class="footer-tagline" data-en="Premium Hair & Color · Prague" data-cz="Prémiový Vlasový Salon · Praha" data-ru="Премиальный Салон Волос · Прага">Premium Hair & Color · Prague</div>
+  </div>
+  <nav class="footer-nav">
+    <a href="#about" data-en="Philosophy" data-cz="Filozofie" data-ru="Философия">Philosophy</a>
+    <a href="#services" data-en="Services" data-cz="Služby" data-ru="Услуги">Services</a>
+    <a href="#specialists" data-en="Team" data-cz="Tým" data-ru="Команда">Team</a>
+    <a href="#location" data-en="Location" data-cz="Kde Nás Najít" data-ru="Адрес">Location</a>
+  </nav>
+  <div class="footer-copy">© 2025 Studio 8 Prague · Plzeňská 535/50 · <span data-en="All rights reserved" data-cz="Všechna práva vyhrazena" data-ru="Все права защищены">All rights reserved</span></div>
+</footer>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     SCRIPTS
+════════════════════════════════════════════════════════════════════ -->
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// LANGUAGE SYSTEM
+// ─────────────────────────────────────────────────────────────────────────────
+var currentLang = 'en';
+
+function setLang(lang) {
+  currentLang = lang;
+  document.querySelectorAll('[data-' + lang + ']').forEach(function(el) {
+    var val = el.getAttribute('data-' + lang);
+    if (val) el.innerHTML = val;
+  });
+  document.querySelectorAll('.lang-btn').forEach(function(btn) {
+    btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// THREE.JS WEBGL ENGINE
+// ─────────────────────────────────────────────────────────────────────────────
+(function() {
+  var W = window.innerWidth;
+  var H = window.innerHeight;
+
+  // Renderer
+  var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setSize(W, H);
+  renderer.setClearColor(0x000000, 0);
+  document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+  // Scene
+  var scene = new THREE.Scene();
+
+  // Camera
+  var camera = new THREE.PerspectiveCamera(55, W / H, 0.1, 100);
+  camera.position.set(0, 0, 4.6);
+
+  // ── LIGHTS ──
+  var ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+  scene.add(ambientLight);
+
+  var dirLight1 = new THREE.DirectionalLight(0xffffff, 5.5);
+  dirLight1.position.set(6, 6, 6);
+  scene.add(dirLight1);
+
+  var dirLight2 = new THREE.DirectionalLight(0xffb6c1, 4.0);
+  dirLight2.position.set(-6, -2, -4);
+  scene.add(dirLight2);
+
+  var dirLight3 = new THREE.DirectionalLight(0xffe0e8, 2.5);
+  dirLight3.position.set(0, -6, 4);
+  scene.add(dirLight3);
+
+  // ── CORE MESH: INFINITY KNOT ──
+  var geometry = new THREE.TorusKnotGeometry(1.2, 0.32, 180, 24, 2, 3);
+  var material = new THREE.MeshStandardMaterial({
+    color: 0x1a1a1a,
+    metalness: 1.0,
+    roughness: 0.03
+  });
+  var knot = new THREE.Mesh(geometry, material);
+  knot.position.set(0, 0, 0);
+  scene.add(knot);
+
+  // ── MOUSE TRACKING ──
+  var mouse = { x: 0, y: 0 };
+  var targetRot = { x: 0, y: 0 };
+  var currentRot = { x: 0, y: 0 };
+
+  document.addEventListener('mousemove', function(e) {
+    mouse.x = (e.clientX / W - 0.5) * 2;
+    mouse.y = -(e.clientY / H - 0.5) * 2;
+  });
+
+  // ── ANIMATION STATE ──
+  var wireframeMode = false;
+  var baseRotSpeed = 0.003;
+  var isScrolled = false;
+
+  // ── GSAP SCROLL: Camera zoom into knot ──
+  gsap.registerPlugin(ScrollTrigger);
+
+  // Hero zoom-in on scroll start
+  ScrollTrigger.create({
+    trigger: '#about',
+    start: 'top bottom',
+    end: 'top top',
+    scrub: 1.5,
+    onUpdate: function(self) {
+      camera.position.z = 4.6 - self.progress * 1.8;
+    }
+  });
+
+  // Services: wireframe mode
+  ScrollTrigger.create({
+    trigger: '#services',
+    start: 'top 60%',
+    end: 'bottom 40%',
+    onEnter: function() {
+      gsap.to(material, { wireframe: true, duration: 0 });
+      material.wireframe = true;
+      wireframeMode = true;
+      gsap.to('#particle-canvas', { opacity: 1, duration: 0.8 });
+      gsap.to('#data-pulses', { opacity: 1, duration: 0.8 });
+      animatePulses();
+    },
+    onLeave: function() {
+      material.wireframe = false;
+      wireframeMode = false;
+      gsap.to('#particle-canvas', { opacity: 0, duration: 1 });
+      gsap.to('#data-pulses', { opacity: 0, duration: 0.8 });
+      // Re-center camera
+      gsap.to(camera.position, { z: 3.2, duration: 1.2, ease: 'power2.out' });
+    },
+    onEnterBack: function() {
+      material.wireframe = true;
+      wireframeMode = true;
+      gsap.to('#particle-canvas', { opacity: 1, duration: 0.8 });
+      gsap.to('#data-pulses', { opacity: 1, duration: 0.8 });
+    },
+    onLeaveBack: function() {
+      material.wireframe = false;
+      wireframeMode = false;
+      gsap.to('#particle-canvas', { opacity: 0, duration: 1 });
+      gsap.to('#data-pulses', { opacity: 0, duration: 0.8 });
+      gsap.to(camera.position, { z: 4.6, duration: 1.2, ease: 'power2.out' });
+    }
+  });
+
+  // Bento grid diagonal exit
+  ScrollTrigger.create({
+    trigger: '#services',
+    start: 'center center',
+    end: 'bottom top',
+    scrub: 1,
+    pin: false,
+    onUpdate: function(self) {
+      var p = self.progress;
+      gsap.set('#bento-grid', {
+        x: p * (window.innerWidth * 1.3),
+        y: p * (-window.innerHeight * 1.3),
+        opacity: 1 - p
+      });
+    },
+    onLeave: function() {
+      gsap.set('#bento-grid', { x: 0, y: 0, opacity: 1 });
+    },
+    onLeaveBack: function() {
+      gsap.set('#bento-grid', { x: 0, y: 0, opacity: 1 });
+    }
+  });
+
+  // ── RENDER LOOP ──
+  var clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    var t = clock.getElapsedTime();
+
+    // Fluid mouse tracking (heavy dampening)
+    targetRot.x = mouse.y * 0.4;
+    targetRot.y = mouse.x * 0.4;
+    currentRot.x = THREE.MathUtils.lerp(currentRot.x, targetRot.x, 0.05);
+    currentRot.y = THREE.MathUtils.lerp(currentRot.y, targetRot.y, 0.05);
+
+    knot.rotation.x = currentRot.x + t * baseRotSpeed;
+    knot.rotation.y = currentRot.y + t * (baseRotSpeed * 0.7);
+    knot.rotation.z = t * (baseRotSpeed * 0.3);
+
+    // Wireframe color pulse
+    if (wireframeMode) {
+      var pulse = 0.5 + 0.5 * Math.sin(t * 3);
+      material.color.setRGB(0.3 + pulse * 0.4, 0.1 + pulse * 0.2, 0.15 + pulse * 0.3);
+    } else {
+      material.color.setRGB(0.102, 0.102, 0.102);
+    }
+
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  // ── RESIZE ──
+  window.addEventListener('resize', function() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    camera.aspect = W / H;
+    camera.updateProjectionMatrix();
+    renderer.setSize(W, H);
+  });
+})();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PARTICLE CANVAS: DIAGONAL MATRIX LINES
+// ─────────────────────────────────────────────────────────────────────────────
+(function() {
+  var canvas = document.getElementById('particle-canvas');
+  var ctx = canvas.getContext('2d');
+  var W, H;
+
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // Generate 2500 particles
+  var particles = [];
+  for (var i = 0; i < 2500; i++) {
+    particles.push({
+      x: Math.random() * 2000 - 500,
+      y: Math.random() * 2000 - 500,
+      vx: 0.6 + Math.random() * 1.2,   // 45-degree velocity
+      vy: -(0.6 + Math.random() * 1.2),
+      alpha: 0.1 + Math.random() * 0.7,
+      size: 0.5 + Math.random() * 1.5,
+      trail: 20 + Math.random() * 60,
+      hue: 340 + Math.random() * 20
+    });
+  }
+
+  var active = false;
+
+  // Watch opacity of particle canvas
+  var mo = new MutationObserver(function() {
+    active = parseFloat(canvas.style.opacity || '0') > 0.1;
+  });
+  mo.observe(canvas, { attributes: true, attributeFilter: ['style'] });
+
+  function drawParticles(t) {
+    ctx.clearRect(0, 0, W, H);
+    if (!active) return;
+
+    particles.forEach(function(p) {
+      p.x += p.vx;
+      p.y += p.vy;
+
+      // Reset when off screen (diagonal wrap)
+      if (p.x > W + 200 || p.y < -200) {
+        p.x = Math.random() * W * 0.5;
+        p.y = H + Math.random() * H * 0.5;
+      }
+
+      var alpha = p.alpha * (0.5 + 0.5 * Math.sin(t * 2 + p.x * 0.01));
+
+      // Draw diagonal line segment
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+      ctx.lineTo(p.x - p.trail * 0.707, p.y + p.trail * 0.707);
+      ctx.strokeStyle = 'hsla(' + p.hue + ', 80%, 80%, ' + alpha + ')';
+      ctx.lineWidth = p.size;
+      ctx.stroke();
+
+      // Bright dot at tip
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * 1.5, 0, Math.PI * 2);
+      ctx.fillStyle = 'hsla(' + p.hue + ', 90%, 90%, ' + (alpha * 1.5) + ')';
+      ctx.fill();
+    });
+  }
+
+  var t = 0;
+  function loop() {
+    requestAnimationFrame(loop);
+    t += 0.016;
+    drawParticles(t);
+  }
+  loop();
+})();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DATA PULSE ANIMATION
+// ─────────────────────────────────────────────────────────────────────────────
+function animatePulses() {
+  var pulses = ['#pulse-1','#pulse-2','#pulse-3','#pulse-4','#pulse-5'];
+  var delays = [0, 0.4, 0.8, 1.2, 1.6];
+
+  pulses.forEach(function(id, i) {
+    var el = document.querySelector(id);
+    if (!el) return;
+
+    function runPulse() {
+      // Reset position
+      gsap.set(el, {
+        x: -200,
+        y: 0,
+        opacity: 0
+      });
+
+      // Animate diagonally up-right
+      gsap.to(el, {
+        x: window.innerWidth + 400,
+        y: -(window.innerHeight * 0.8),
+        opacity: 1,
+        duration: 3.5 + i * 0.5,
+        delay: delays[i],
+        ease: 'none',
+        onComplete: function() {
+          if (document.querySelector('#data-pulses').style.opacity > 0.1) {
+            runPulse();
+          }
+        }
+      });
+    }
+
+    runPulse();
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HERO ENTRANCE ANIMATION
+// ─────────────────────────────────────────────────────────────────────────────
+window.addEventListener('load', function() {
+  var tl = gsap.timeline({ delay: 0.3 });
+
+  tl.to('#hero-eyebrow', {
+    opacity: 1,
+    y: 0,
+    duration: 1.2,
+    ease: 'power3.out'
+  });
+
+  tl.to('#hero-title', {
+    opacity: 1,
+    y: 0,
+    duration: 1.4,
+    ease: 'power3.out'
+  }, '-=0.8');
+
+  tl.to('#hero-sub', {
+    opacity: 1,
+    y: 0,
+    duration: 1.2,
+    ease: 'power3.out'
+  }, '-=0.9');
+
+  tl.to('#scroll-cue', {
+    opacity: 1,
+    duration: 1,
+    ease: 'power2.out'
+  }, '-=0.5');
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BENTO CARD 3D TILT
+// ─────────────────────────────────────────────────────────────────────────────
+document.querySelectorAll('[data-tilt]').forEach(function(card) {
+  card.addEventListener('mousemove', function(e) {
+    var rect = card.getBoundingClientRect();
+    var cx = rect.left + rect.width / 2;
+    var cy = rect.top + rect.height / 2;
+    var dx = (e.clientX - cx) / (rect.width / 2);
+    var dy = (e.clientY - cy) / (rect.height / 2);
+    var rx = -dy * 8;
+    var ry = dx * 8;
+    card.style.transform = 'perspective(800px) rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) translateZ(10px)';
+  });
+
+  card.addEventListener('mouseleave', function() {
+    card.style.transform = 'perspective(800px) rotateX(0deg) rotateY(0deg) translateZ(0px)';
+    card.style.transition = 'transform 0.6s ease';
+  });
+
+  card.addEventListener('mouseenter', function() {
+    card.style.transition = 'transform 0.1s linear';
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SECTION SCROLL-IN REVEALS
+// ─────────────────────────────────────────────────────────────────────────────
+gsap.utils.toArray('#about .about-inner').forEach(function(el) {
+  gsap.from(el, {
+    scrollTrigger: { trigger: el, start: 'top 80%' },
+    opacity: 0,
+    y: 60,
+    duration: 1.4,
+    ease: 'power3.out'
+  });
+});
+
+gsap.utils.toArray('.spec-card').forEach(function(card, i) {
+  gsap.from(card, {
+    scrollTrigger: { trigger: card, start: 'top 85%' },
+    opacity: 0,
+    y: 50,
+    duration: 1.1,
+    delay: i * 0.15,
+    ease: 'power3.out'
+  });
+});
+
+gsap.from('.map-wrapper', {
+  scrollTrigger: { trigger: '.map-wrapper', start: 'top 80%' },
+  opacity: 0,
+  y: 40,
+  duration: 1.2,
+  ease: 'power3.out'
+});
+
+gsap.from('.address-block', {
+  scrollTrigger: { trigger: '.address-block', start: 'top 85%' },
+  opacity: 0,
+  y: 30,
+  duration: 1,
+  ease: 'power3.out'
+});
+
+// Bento cards stagger in
+gsap.utils.toArray('.bento-card').forEach(function(card, i) {
+  gsap.from(card, {
+    scrollTrigger: { trigger: '#bento-grid', start: 'top 80%' },
+    opacity: 0,
+    y: 40,
+    duration: 0.9,
+    delay: i * 0.12,
+    ease: 'power3.out'
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SPECIALISTS SECTION — 3D PARTICLE REVEAL TEXT
+// ─────────────────────────────────────────────────────────────────────────────
+ScrollTrigger.create({
+  trigger: '#specialists',
+  start: 'top 60%',
+  onEnter: function() {
+    gsap.to('#particle-canvas', { opacity: 0, duration: 0.6 });
+    gsap.to('#data-pulses', { opacity: 0, duration: 0.4 });
+  }
+});
+</script>
+
+</body>
+</html>
